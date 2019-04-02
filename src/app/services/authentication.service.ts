@@ -1,35 +1,47 @@
+import { map } from "rxjs/operators";
+import { Router } from '@angular/router';
 import { User } from './../models/user';
 import { Injectable } from '@angular/core';
-
-declare var firebase;
+import { AngularFireAuth } from '@angular/fire/auth';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
 
-  async signupUser(user: User) {
-    await firebase.auth().createUserWithEmailAndPassword(user.email, user.password).catch(function (error) {
-      throw "Invalid credentials";
-    });
+  constructor(private afAuth: AngularFireAuth,
+    private router: Router) {
   }
 
-  async loginUser(user: User) {
-    await firebase.auth().signInWithEmailAndPassword(user.email, user.password).catch(function (error) {
-      throw "Invalid credentials";
-    });
+  registerUser(user: User) {
+    return new Promise((resolve, reject) => {
+      this.afAuth.auth.createUserAndRetrieveDataWithEmailAndPassword(user.email, user.password)
+        .then(userData => {
+          userData.user.updateProfile({
+            displayName: user.username
+          }),
+            resolve(userData)
+        }
+        ),
+        rej => reject("invalid credentials");
+    })
   }
 
-  logoutUser(){
-    firebase.auth().signOut();
+  loginUser(user: User) {
+    return new Promise((resolve, reject) => {
+      this.afAuth.auth.signInWithEmailAndPassword(user.email, user.password)
+        .then(userData => resolve(userData)
+        ),
+        rej => reject("Invalid crenedtials");
+    })
   }
 
-   isAuthenticated() {
-    var user = firebase.auth().currentUser;
-    if (user) {
-      return true;
-    } else {
-      return false;
-    }
+  getUser() {
+    return this.afAuth.authState.pipe(map(auth => auth));
+  }
+
+  logout() {
+    this.router.navigate(['']);
+    return this.afAuth.auth.signOut();
   }
 }

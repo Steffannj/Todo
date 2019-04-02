@@ -1,3 +1,4 @@
+import { Router } from '@angular/router';
 import { User } from './../models/user';
 import { AuthenticationService } from './../services/authentication.service';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
@@ -12,7 +13,7 @@ export class SignupComponent implements OnInit {
   private signupForm: FormGroup;
   private error: string;
 
-  constructor(private formBuilder: FormBuilder, private as: AuthenticationService) { }
+  constructor(private formBuilder: FormBuilder, private as: AuthenticationService, private router: Router) { }
 
   ngOnInit() {
     this.signupForm = this.formBuilder.group({
@@ -24,9 +25,10 @@ export class SignupComponent implements OnInit {
   }
 
   onSubmit() {
-    this.as.signupUser(this.signupForm.value).catch(error => this.error = error);
-
-   }
+    this.as.registerUser(this.signupForm.value)
+      .then(res => this.router.navigate(['home']))
+      .catch(error => this.error = error);
+  }
 
   validEmail(control: FormControl) {
     if (!control.value.match(/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/)) {
